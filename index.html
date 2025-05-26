@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendario Pulizie Casa</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏠 Calendario Pulizie Casa</h1>
+            <p>Sistema intelligente con rotazione automatica e punti</p>
+            <div class="nav-tabs">
+                <button class="tab-btn active" onclick="showTab('calendario')">📅 Calendario</button>
+                <button class="tab-btn" onclick="showTab('impostazioni')">⚙️ Impostazioni</button>
+                <button class="tab-btn" onclick="showTab('immondizia')">🗑️ Immondizia</button>
+                <button class="tab-btn" onclick="showTab('spesa')">🛒 Lista Spesa</button>
+            </div>
+        </div>
+        
+        <div class="content">
+            <!-- TAB CALENDARIO -->
+            <div id="calendario" class="tab-content active">
+                 <div class="week-selector">
+    <div class="week-nav">
+        <button onclick="changeWeek(-1)">← Settimana Precedente</button>
+        <div class="current-week">Settimana <span id="weekNumber">1</span></div>
+        <button onclick="changeWeek(1)">Settimana Successiva →</button>
+    </div>
+    <!-- AGGIUNGI QUESTO PULSANTE -->
+    <button class="btn-today" onclick="goToCurrentWeek()">📍 Torna alla settimana odierna</button>
+    <p>Periodo: <span id="weekDates"></span></p>
+</div>
+               
+                
+                <div class="schedule-grid" id="scheduleGrid">
+                    <!-- Generato dinamicamente -->
+                </div>
+                
+                <div class="alert alert-info">
+                    <strong>💡 Come funziona:</strong> La rotazione è automatica ogni settimana. Puoi modificare la prima settimana nelle impostazioni e il sistema continuerà la rotazione.
+                </div>
+            </div>
+            
+            <!-- TAB IMPOSTAZIONI -->
+            <div id="impostazioni" class="tab-content">
+                <div class="settings-section">
+                    <div class="settings-title">👥 Nomi Coinquilini</div>
+                    <div class="person-setup">
+                        <div class="form-group">
+                            <label>Persona 1:</label>
+                            <input type="text" id="name1" value="Marco" onchange="saveSettings()">
+                        </div>
+                        <div class="form-group">
+                            <label>Persona 2:</label>
+                            <input type="text" id="name2" value="Luca" onchange="saveSettings()">
+                        </div>
+                        <div class="form-group">
+                            <label>Persona 3:</label>
+                            <input type="text" id="name3" value="Sara" onchange="saveSettings()">
+                        </div>
+                        <div class="form-group">
+                            <label>Persona 4:</label>
+                            <input type="text" id="name4" value="Anna" onchange="saveSettings()">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <div class="settings-title">🏠 Nomi Bagni e Cucina</div>
+                    <div class="form-group">
+                        <label>Nome Bagno 1:</label>
+                        <input type="text" id="bagno1Name" value="Bagno MN" onchange="saveSettings()">
+                    </div>
+                    <div class="form-group">
+                        <label>Nome Bagno 2:</label>
+                        <input type="text" id="bagno2Name" value="Bagno PP" onchange="saveSettings()">
+                    </div>
+                    <div class="form-group">
+                        <label>Nome Area Cucina:</label>
+                        <input type="text" id="cucinaName" value="Cucina" onchange="saveSettings()">
+                    </div>
+                </div>
+                <div class="settings-section">
+    <div class="settings-title">🚫 Restrizioni Pulizie</div>
+    <p style="margin-bottom: 20px; color: #666;">
+        Scegli chi può pulire ogni bagno. Se non selezioni nessuno, tutti possono pulire quel bagno.
+    </p>
+    
+    <div class="restrictions-grid">
+        <div class="restriction-group">
+            <h4>Chi può pulire <span id="bagno1RestrictionLabel">Bagno MN</span>:</h4>
+            <div class="checkbox-group">
+                <label><input type="checkbox" id="bagno1_person0" onchange="saveRestrictions()"> <span id="bagno1_name0">Marco</span></label>
+                <label><input type="checkbox" id="bagno1_person1" onchange="saveRestrictions()"> <span id="bagno1_name1">Luca</span></label>
+                <label><input type="checkbox" id="bagno1_person2" onchange="saveRestrictions()"> <span id="bagno1_name2">Sara</span></label>
+                <label><input type="checkbox" id="bagno1_person3" onchange="saveRestrictions()"> <span id="bagno1_name3">Anna</span></label>
+            </div>
+        </div>
+        
+        <div class="restriction-group">
+            <h4>Chi può pulire <span id="bagno2RestrictionLabel">Bagno PP</span>:</h4>
+            <div class="checkbox-group">
+                <label><input type="checkbox" id="bagno2_person0" onchange="saveRestrictions()"> <span id="bagno2_name0">Marco</span></label>
+                <label><input type="checkbox" id="bagno2_person1" onchange="saveRestrictions()"> <span id="bagno2_name1">Luca</span></label>
+                <label><input type="checkbox" id="bagno2_person2" onchange="saveRestrictions()"> <span id="bagno2_name2">Sara</span></label>
+                <label><input type="checkbox" id="bagno2_person3" onchange="saveRestrictions()"> <span id="bagno2_name3">Anna</span></label>
+            </div>
+        </div>
+        
+        <div class="restriction-group">
+            <h4>Chi può pulire <span id="cucinaRestrictionLabel">Cucina</span>:</h4>
+            <div class="checkbox-group">
+                <label><input type="checkbox" id="cucina_person0" onchange="saveRestrictions()"> <span id="cucina_name0">Marco</span></label>
+                <label><input type="checkbox" id="cucina_person1" onchange="saveRestrictions()"> <span id="cucina_name1">Luca</span></label>
+                <label><input type="checkbox" id="cucina_person2" onchange="saveRestrictions()"> <span id="cucina_name2">Sara</span></label>
+                <label><input type="checkbox" id="cucina_person3" onchange="saveRestrictions()"> <span id="cucina_name3">Anna</span></label>
+            </div>
+        </div>
+    </div>
+    
+    <div class="alert alert-warning" style="margin-top: 15px;">
+        <strong>⚠️ Attenzione:</strong> Assicurati che almeno una persona possa pulire ogni ambiente, altrimenti la rotazione potrebbe non funzionare.
+    </div>
+</div>
+                <!-- Sezione Gestione Turnazioni Personalizzate -->
+<div class="settings-section">
+    <h3>🔧 Gestione Turnazioni Personalizzate</h3>
+    <p class="settings-description">
+        Personalizza le assegnazioni settimana per settimana invece di usare la rotazione automatica.
+    </p>
+    <div id="customRotationsContainer">
+        <!-- Il contenuto verrà generato dinamicamente da JavaScript -->
+    </div>
+    <div class="restrictions-actions" style="margin-top: 15px;">
+    <button onclick="saveRestrictions()" class="btn-save">💾 Salva Restrizioni</button>
+    <button onclick="regenerateRotations()" class="btn-regenerate">🔄 Ricrea Turnazioni</button>
+    <button onclick="resetRotations()" class="btn-reset">⚠️ Reset Completo</button>
+</div>
+</div>
+                <div class="settings-section">
+                    <div class="settings-title">📅 Impostazione Prima Settimana</div>
+                    <p style="margin-bottom: 20px; color: #666;">
+                        Scegli chi deve pulire cosa nella prima settimana. Il sistema continuerà automaticamente la rotazione.
+                    </p>
+                    <div class="week-setup">
+                        <div class="form-group">
+                            <label>Chi pulisce <span id="bagno1Label">Bagno MN</span>:</label>
+                            <select id="bagno1Person" onchange="updateRotation()">
+                                <option value="1">Marco</option>
+                                <option value="2">Luca</option>
+                                <option value="3">Sara</option>
+                                <option value="4">Anna</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Chi pulisce <span id="bagno2Label">Bagno PP</span>:</label>
+                            <select id="bagno2Person" onchange="updateRotation()">
+                                <option value="1">Marco</option>
+                                <option value="2" selected>Luca</option>
+                                <option value="3">Sara</option>
+                                <option value="4">Anna</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Chi pulisce <span id="cucinaLabel">Cucina</span>:</label>
+                            <select id="cucinaPersona" onchange="updateRotation()">
+                                <option value="1">Marco</option>
+                                <option value="2">Luca</option>
+                                <option value="3" selected>Sara</option>
+                                <option value="4">Anna</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <div class="settings-title">🔗 Configurazione Firebase</div>
+                    <p style="margin-bottom: 15px; color: #666;">
+                        Per condividere i dati tra dispositivi, configura Firebase una sola volta.
+                    </p>
+                    <div class="form-group">
+                        <label>Database URL Firebase:</label>
+                        <input type="text" id="firebaseUrl" placeholder="https://tuo-progetto-default-rtdb.firebaseio.com/" onchange="saveFirebaseConfig()">
+                        <small>Lascia vuoto per usare solo questo dispositivo</small>
+                    </div>
+                    <div class="firebase-status" id="firebaseStatus">
+                        <span id="connectionStatus">🔴 Non connesso</span>
+                        <button class="btn btn-small" onclick="testFirebaseConnection()">Test Connessione</button>
+                    </div>
+                </div>
+                
+                <div class="data-management">
+                    <div class="settings-title">💾 Gestione Dati</div>
+                    <p style="margin-bottom: 15px;">Salva o ripristina i tuoi dati per condividerli con i coinquilini.</p>
+                    <div class="export-import">
+                        <button class="btn" onclick="exportData()">📤 Esporta Dati</button>
+                        <button class="btn" onclick="document.getElementById('importFile').click()">📥 Importa Dati</button>
+                        <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importData(event)">
+                        <button class="btn btn-danger" onclick="resetAllData()">🔄 Reset Tutto</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- TAB IMMONDIZIA -->
+            <div id="immondizia" class="tab-content">
+                <div class="next-turn">
+                    🗑️ Prossimo a buttare l'immondizia: <span id="nextTrashPerson">-</span>
+                </div>
+                
+                <div class="points-section">
+                    <div class="settings-title">📊 Sistema Punti Immondizia</div>
+                    <p style="margin-bottom: 20px; color: #666;">
+                        Chi butta l'immondizia guadagna punti e scende di priorità. Chi ha meno punti deve buttarla per primo.
+                    </p>
+                    
+                    <div class="points-container" id="trashPointsContainer">
+                        <!-- Generato dinamicamente -->
+                    </div>
+                    
+                    <div class="points-actions">
+                        <button class="btn btn-danger" onclick="resetTrashPoints()">🔄 Reset Punti</button>
+                    </div>
+                </div>
+                
+                <div class="alert alert-info">
+                    <strong>💡 Come funziona:</strong> Quando butti l'immondizia, clicca "+1" per guadagnare un punto. Chi ha meno punti ha la priorità più alta per buttare l'immondizia.
+                </div>
+            </div>
+            
+            <!-- TAB SPESA -->
+            <div id="spesa" class="tab-content">
+                <div class="next-turn">
+                    🛍️ Prossimo a fare la spesa: <span id="nextShoppingPerson">-</span>
+                </div>
+                
+                <div class="shopping-section">
+                    <div class="settings-title">🛒 Lista della Spesa</div>
+                    
+                    <div class="add-item">
+                        <input type="text" id="newShoppingItem" placeholder="Nuovo prodotto...">
+                        <select id="shoppingPersonSelect">
+                            <option value="0">Marco</option>
+                            <option value="1">Luca</option>
+                            <option value="2">Sara</option>
+                            <option value="3">Anna</option>
+                        </select>
+                        <button class="btn" onclick="addShoppingItem()">Aggiungi</button>
+                    </div>
+                    
+                    <div class="shopping-list" id="shoppingListContainer">
+                        <!-- Generato dinamicamente -->
+                    </div>
+                    
+                    <div class="shopping-actions">
+                        <button class="btn" onclick="clearCompletedItems()">🧹 Rimuovi Completati</button>
+                        <button class="btn btn-danger" onclick="clearAllShoppingItems()">🗑️ Cancella Lista</button>
+                    </div>
+                </div>
+                
+                <div class="points-section">
+                    <div class="settings-title">🛍️ Sistema Punti Spesa</div>
+                    <p style="margin-bottom: 20px; color: #666;">
+                        Chi fa la spesa guadagna punti. Chi ha meno punti ha priorità per la prossima spesa.
+                    </p>
+                    
+                    <div class="points-container" id="shoppingPointsContainer">
+                        <!-- Generato dinamicamente -->
+                    </div>
+                    
+                    <div class="points-actions">
+                        <button class="btn btn-danger" onclick="resetShoppingPoints()">🔄 Reset Punti</button>
+                    </div>
+                </div>
+                
+                <div class="alert alert-info">
+                    <strong>💡 Come funziona:</strong> Aggiungi prodotti alla lista, spunta quelli acquistati, e clicca "+1" per guadagnare punti quando fai la spesa.
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Firebase SDK -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.22.2/firebase-app-compat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.22.2/firebase-database-compat.min.js"></script>
+    
+    <script src="script.js"></script>
+</body>
+</html>
